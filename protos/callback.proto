@@ -1,0 +1,125 @@
+syntax = "proto3";
+
+package functions;
+
+option csharp_namespace = "QuikGrpc";
+
+import "structures.proto"; // Структуры данных
+
+// 2. Функции терминала, доступные в скрипте Lua
+
+// 2.2 Функции обратного вызова
+service CallbackFunctions {
+  rpc Callback(stream CallbackRequest) returns (stream CallbackResponse);
+}
+
+// Подписка / Отмена подписки на функции обратного вызова
+message CallbackRequest {
+  oneof payload {
+    bool firm = 1; // 2.2.1 OnFirm Новая фирма
+    ClassSecCodeSubscribtion all_trade = 2; // 2.2.2 OnAllTrade Новая обезличенная сделка
+    bool trade = 3; // 2.2.3 OnTrade Новая сделка / Изменение существующей сделки
+    bool order = 4; // 2.2.4 OnOrder Новая заявка / Изменение существующей заявки
+    bool account_balance = 5; // 2.2.5 OnAccountBalance Изменение текущей позиции по счету
+    bool futures_limit_change = 6; // 2.2.6 OnFuturesLimitChange Изменение ограничений по срочному рынку
+    bool futures_limit_delete = 7; // 2.2.7 OnFuturesLimitDelete Удаление ограничений по срочному рынку
+    bool futures_client_holding = 8; // 2.2.8 OnFuturesClientHolding Изменение позиции по срочному рынку
+    bool money_limit = 9; // 2.2.9 OnMoneyLimit Изменение денежной позиции
+    bool money_limit_delete = 10; // 2.2.10 OnMoneyLimitDelete Удаление денежной позиции
+    bool depo_limit = 11; // 2.2.11 OnDepoLimit Изменение позиций по инструментам
+    bool depo_limit_delete = 12; // 2.2.12 OnDepoLimitDelete Удаление позиции по инструментам
+    bool account_position = 13; // 2.2.13 OnAccountPosition Изменение денежных средств
+
+    // 2.2.14 (OnNegDeal) Новая внебиржевая заявка / Изменение существующей внебиржевой заявки
+    // 2.2.15 (OnNegTrade) Новая внебиржевая сделка / Изменение существующей внебиржевой сделки
+    
+    bool stop_order = 16; // 2.2.16 OnStopOrder Новая стоп заявка / Изменение существующей стоп заявки
+    bool trans_reply = 17; // 2.2.17 OnTransReply Ответ на транзакцию пользователя
+    bool param = 18; // 2.2.18 OnParam Изменение текущих параметров
+    // 3.17.1 Subscribe_Level_II_Quotes Функция заказывает на сервер получение стакана по указанному режиму торгов и инструменту
+    // 3.17.2 Unsubscribe_Level_II_Quotes Функция отменяет заказ на получение с сервера стакана по указанному режиму торгов и инструменту
+    ClassSecCodeSubscribtion quote = 19; // 2.2.19 OnQuote Изменение стакана котировок
+    bool disconnected = 20; // 2.2.20 OnDisconnected Отключение терминала от сервера QUIK
+    bool connected = 21; // 2.2.21 OnConnected Соединение терминала с сервером QUIK
+    
+    // 2.2.22 (OnCleanUp) Смена сервера QUIK / Пользователя / Сессии
+    
+    bool close = 23; // 2.2.23 OnClose Закрытие терминала QUIK
+    bool stop = 24; // 2.2.24 OnStop Остановка LUA скрипта в терминале QUIK / закрытие терминала QUIK
+    bool init = 25; // 2.2.25 OnInit Запуск LUA скрипта в терминале QUIK
+    
+    // 2.2.26 (main) Функция, реализующая основной поток выполнения в скрипте
+    
+    // QUIK# subscribe_to_candles Подписка на свечи
+    // QUIK# unsubscribe_from_candles Отмена подписки на свечи
+    CandleSubscribtion candle = 27; // QUIK# NewCandle Новая свечка
+    bool error = 28; // QUIK# lua_error Сообщение об ошибке
+  }
+}
+
+// Запросы Подписки / Отмены подписки
+
+// Режим торгов и инструмент
+message ClassSecCodeSubscribtion {
+    ClassSecCode class_sec_code = 1; // Режим торгов и инструмент
+    bool subscribe = 2; // True - Подписка, False - Отмена подписки
+}
+
+// Новые свечки
+message CandleSubscribtion {
+  ClassSecCode class_sec_code = 1; // Режим торгов и инструмент
+  TimeFrame timeframe = 2; // Временной интервал
+  optional string param = 3; // Если параметр не задан, то заказываются данные на основании Таблицы обезличенных сделок, если задан – данные по этому параметру https://forum.quik.ru/forum10/topic7249/
+  bool subscribe = 4; // True - Подписка, False - Отмена подписки
+}
+
+// Сообщения обратного вызова
+message CallbackResponse {
+  oneof payload {
+    Firm firm = 1; // 2.2.1 OnFirm Функция вызывается терминалом QUIK при получении описания новой фирмы от сервера
+    AllTrade all_trade = 2; // 2.2.2 OnAllTrade Функция вызывается терминалом QUIK при получении обезличенной сделки
+    Trade trade = 3; // 2.2.3 OnTrade Функция вызывается терминалом QUIK при получении сделки или при изменении параметров существующей сделки
+    Order order = 4; // 2.2.4 OnOrder Функция вызывается терминалом QUIK при получении новой заявки или при изменении параметров существующей заявки
+    AccountBalance account_balance = 5; // 2.2.5 OnAccountBalance Функция вызывается терминалом QUIK при получении изменений текущей позиции по счету
+    FuturesLimit futures_limit_change = 6; // 2.2.6 OnFuturesLimitChange Функция вызывается терминалом QUIK при получении изменений ограничений по срочному рынку
+    FuturesLimitDelete futures_limit_delete = 7; // 2.2.7 OnFuturesLimitDelete Функция вызывается терминалом QUIK при удалении лимита по срочному рынку
+    FuturesClientHolding futures_client_holding = 8; // 2.2.8 OnFuturesClientHolding Функция вызывается терминалом QUIK при изменении позиции по срочному рынку
+    MoneyLimit money_limit = 9; // 2.2.9 OnMoneyLimit Функция вызывается терминалом QUIK при получении изменений по денежной позиции клиента
+    MoneyLimitDelete money_limit_delete = 10; // 2.2.10 OnMoneyLimitDelete Функция вызывается терминалом QUIK при удалении денежной позиции
+    DepoLimit depo_limit = 11; // 2.2.11 OnDepoLimit Функция вызывается терминалом QUIK при получении изменений позиции по инструментам
+    DepoLimitDelete depo_limit_delete = 12; // 2.2.12 OnDepoLimitDelete Функция вызывается терминалом QUIK при удалении позиции клиента по инструментам
+    AccountPosition account_position = 13; // 2.2.13 OnAccountPosition Функция вызывается терминалом QUIK при изменении позиции участника по денежным средствам
+    
+    // 2.2.14 (OnNegDeal) Функция вызывается терминалом QUIK при получении внебиржевой заявки или при изменении параметров существующей внебиржевой заявки
+    // 2.2.15 (OnNegTrade) Функция вызывается терминалом QUIK при получении сделки для исполнения или при изменении параметров существующей сделки для исполнения
+
+    StopOrder stop_order = 16; // 2.2.16 OnStopOrder Функция вызывается терминалом QUIK при получении новой стоп-заявки или при изменении параметров существующей стоп-заявки
+    // 2.2.17 OnTransReply Функция вызывается терминалом QUIK при получении ответа на транзакцию пользователя,
+    // отправленную с помощью любого плагина Рабочего места QUIK (в том числе QLua). Для транзакций,
+    // отправленных с помощью Trans2quik.dll, QPILE или динамической загрузки транзакций из файла, функция не вызывается
+    TransReply trans_reply = 17;
+    
+    ClassSecCode param = 18; // 2.2.18 OnParam Функция вызывается терминалом QUIK при изменении текущих параметров
+    Quote quote = 19; // 2.2.19 OnQuote Функция вызывается терминалом QUIK при получении изменения стакана котировок
+
+    bool disconnected = 20; // 2.2.20 OnDisconnected Функция вызывается терминалом QUIK при отключении от сервера QUIK
+    bool connected = 21; // 2.2.21 OnConnected Функция вызывается терминалом QUIK при установлении связи с сервером QUIK и получении терминалом описания хотя бы одного режима торгов.
+
+    // 2.2.22 (OnCleanUp) Функция вызывается терминалом QUIK в следующих случаях: смена сервера QUIK внутри торговой сессии; смена пользователя, которым выполняется подключение к серверу QUIK, внутри торговой сессии; смена сессии
+    
+    Empty close = 23; // 2.2.23 OnClose Функция вызывается перед закрытием терминала QUIK и при выгрузке файла qlua.dll
+
+    // 2.2.24 OnStop Функция вызывается терминалом QUIK при остановке скрипта из диалога управления и при закрытии терминала QUIK. Параметр вызова (и ответа) flag принимает значения:
+    // 1 - При остановке или удалении работающего скрипта Lua из диалога управления Доступные скрипты; 2 - При закрытии терминала QUIK
+    QuikInt stop = 24;
+    QuikString init = 25; // 2.2.25 OnInit Функция вызывается терминалом QUIK перед вызовом функции main(). В качестве параметра принимает значение полного пути к запускаемому скрипту
+    
+    // 2.2.26 (main) Функция, реализующая основной поток выполнения в скрипте. Для ее выполнения терминал QUIK создает отдельный поток.
+    // Скрипт считается работающим, пока работает функция Руководство пользователя Интерпретатора языка Lua 21 main().
+    // При завершении работы функции main() скрипт переходит в состояние «остановлен».
+    // Если скрипт находится в состоянии «остановлен», то не происходит вызовов функций обработки событий терминала QUIK, содержащихся в этом скрипте
+
+    Candle candle = 27; // QUIK# NewCandle Новая свечка
+    QuikString error = 28; // QUIK# lua_error Сообщение об ошибке при подписке/запросе стакана
+  }
+}

@@ -1,0 +1,83 @@
+syntax = "proto3";
+
+package functions;
+
+option csharp_namespace = "QuikGrpc";
+
+import "structures.proto"; // Структуры данных
+
+// Функции отладки / Сервисные функции
+service ServiceFunctions {
+  rpc Ping(QuikString) returns (QuikString); // QUIK# Отправка строки ping. Получение строки pong
+  rpc Echo(QuikString) returns (QuikString); // QUIK# Отправка и получение одного и того же сообщения (эхо)
+  rpc DivideStringByZero(Empty) returns (Empty); // QUIK# Тест обработки ошибок. Выполняется деление строки на 0
+  rpc IsQuik(Empty) returns (QuikBool); // QUIK# Скрипт запущен в QUIK
+
+  rpc IsConnected(Empty) returns (QuikBool); // 2.1.1 Функция предназначена для определения состояния подключения клиентского места к серверу
+  rpc GetScriptPath(Empty) returns (QuikString); // 2.1.2 Функция возвращает путь, по которому находится запускаемый скрипт, без завершающего обратного слеша (\). Например, C:\QuikFront\Scripts 
+  rpc GetInfoParam(InfoParamRequest) returns (QuikString); // 2.1.3 Функция возвращает значения параметров информационного окна (пункт меню Система / О программе / Информационное окно…)
+  rpc Message(MessageRequest) returns (Empty); // 2.1.4 Функция отображает сообщения в терминале QUIK
+  rpc Sleep(QuikInt) returns (Empty); // 2.1.5 Функция приостанавливает выполнение скрипта
+  rpc GetWorkingFolder(Empty) returns (QuikString); // 2.1.6 Функция возвращает путь, по которому находится файл info.exe, исполняющий данный скрипт, без завершающего обратного слеша (\). Например, c:\QuikFront  
+  rpc PrintDbgStr(QuikString) returns (Empty); // 2.1.7 Функция для вывода отладочной информации
+
+  // 2.1.8 (sysdate) Функция возвращает системные дату и время с точностью до микросекунд
+  // 2.1.9 (IsDarkTheme) Функция позволяет получить информацию о том, в какой теме оформления интерфейса в настоящий момент работает терминал: стандартной или темной
+}
+
+// Параметры информационного окна
+enum InfoParamName {
+  VERSION = 0; // Версия программы
+  TRADEDATE = 1; // Дата торгов
+  SERVERTIME = 2; // Время сервера
+  LASTRECORDTIME = 3; // Время последней записи
+  NUMRECORDS = 4; // Число записей
+  LASTRECORD = 5; // Последняя запись
+  LATERECORD = 6; // Отставшая запись
+  CONNECTION = 7; // Соединение
+  IPADDRESS = 8; // IP-адрес сервера
+  IPPORT = 9; // Порт сервера
+  IPCOMMENT = 10; // Описание соединения
+  SERVER = 11; // Описание сервера
+  SESSIONID = 12; // Идентификатор сессии
+  USER = 13; // Пользователь
+  USERID = 14; // ID пользователя
+  ORG = 15; // Организация
+  MEMORY = 16; // Занято памяти
+  LOCALTIME = 17; // Текущее время
+  CONNECTIONTIME = 18; // Время на связи
+  MESSAGESSENT = 19; // Передано сообщений
+  ALLSENT = 20; // Передано всего байт
+  BYTESSENT = 21; // Передано полезных байт
+  BYTESPERSECSENT = 22; // Передано за секунду
+  MESSAGESRECV = 23; // Принято сообщений
+  BYTESRECV = 24; // Принято полезных байт
+  ALLRECV = 25; // Принято всего байт
+  BYTESPERSECRECV = 26; // Принято за секунду
+  AVGSENT = 27; // Средняя скорость передачи
+  AVGRECV = 28; // Средняя скорость приема
+  LASTPINGTIME = 29; // Время последней проверки связи
+  LASTPINGDURATION = 30; // Задержка данных при обмене с сервером
+  AVGPINGDURATION = 31; // Средняя задержка данных
+  MAXPINGTIME = 32; // Время максимальной задержки
+  MAXPINGDURATION = 33; // Максимальная задержка данных
+}
+
+// Запрос параметров информационного окна
+message InfoParamRequest {
+  InfoParamName param_name = 1; // Параметр информационного окна
+}
+
+// Тип отображаемой иконки в сообщении
+enum MessageIconType {
+  UNSPECIFIED = 0; // Неопределенное значение
+  INFO = 1; // Информация
+  WARNING = 2; // Предупреждение  
+  ERROR = 3; // Ошибка
+}
+
+// Запрос параметров сообщения
+message MessageRequest {
+  string message = 1; // Строка, отображаемая в окне сообщений терминала QUIK
+  MessageIconType icon_type = 2; // Тип отображаемой иконки в сообщении
+}
